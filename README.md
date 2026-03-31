@@ -1,12 +1,12 @@
 # PersonaHub
 
-A buyer persona library for sales and marketing teams with AI-powered interview simulation. Store detailed customer profiles, enrich them with context from real calls and meetings, then run training interviews with any persona — right in the browser.
+A persona library for sales and marketing teams with AI-powered interview simulation. Store detailed customer profiles, enrich them with context from real calls and meetings, then run training interviews with any persona — right in the browser.
 
 ---
 
 ## Features
 
-- **Persona dossiers** — rich buyer profiles: pain points, objections, catchphrases, career, social environment
+- **Persona dossiers** — rich customer profiles: pain points, objections, catchphrases, career, social environment
 - **AI interviews** — simulate sales conversations with a persona powered by Anthropic Claude
 - **Context & opinions** — attach notes from real calls; the AI factors them into every interview
 - **Interview summaries** — auto-generated markdown recap after each session
@@ -77,7 +77,7 @@ Configure manually in the extension settings:
 Two demo personas are bundled out of the box so you can explore the app without importing anything:
 
 - **Marina** — retail banking client, credit card segment
-- **Artyom** — aviation industry, AI tools buyer
+- **Artyom** — aviation industry, AI-transformation director
 
 They live as static JSON fixtures and are always available regardless of database state.
 
