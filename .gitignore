@@ -51,8 +51,6 @@ Thumbs.db
 .replit
 .replitignore
 replit.md
-.replit-artifact/
-**/.replit-artifact/
 **/src/.generated/
 attached_assets/
 
