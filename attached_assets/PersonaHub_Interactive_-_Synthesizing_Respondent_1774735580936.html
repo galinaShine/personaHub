@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PersonaHub — Библиотека персон + Интервью</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F8F7F4; --bg2: #EFEDE8; --bg3: #E6E3DC;
+    --card: #FFFFFF; --card-border: rgba(0,0,0,0.06);
+    --text: #1A1A1A; --text2: #6B6560; --text3: #9E9890;
+    --accent: #D4380D; --accent-bg: #FFF1EC;
+    --blue: #1D4ED8; --blue-bg: #EFF6FF;
+    --amber: #B45309; --amber-bg: #FFFBEB;
+    --green: #15803D; --green-bg: #F0FDF4;
+    --purple: #7C3AED; --purple-bg: #F5F3FF;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    --shadow-hover: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06);
+    --radius: 16px; --radius-sm: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Onest', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.55; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Layout ── */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar {
+    width: 380px; min-width: 380px;
+    border-right: 1px solid var(--bg3);
+    overflow-y: auto; padding: 24px 20px;
+    background: var(--bg);
+  }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  @media (max-width: 800px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; min-width: auto; max-height: 45vh; border-right: none; border-bottom: 1px solid var(--bg3); }
+    .main { flex: 1; min-height: 0; }
+  }
+
+  /* ── Header ── */
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 38px; height: 38px; border-radius: 12px;
+    background: linear-gradient(135deg, #1A1A1A, #444);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 16px; font-weight: 800;
+  }
+  .header-title { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+  .header-sub { font-size: 11px; color: var(--text3); font-weight: 500; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 10px;
+    font: 600 12.5px/1 'Onest', sans-serif;
+    border: none; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--text); color: white; }
+  .btn-primary:hover { background: #333; }
+  .btn-ghost { background: var(--bg2); color: var(--text2); }
+  .btn-ghost:hover { background: var(--bg3); }
+  .btn-accent { background: var(--accent); color: white; }
+  .btn-accent:hover { opacity: 0.9; }
+  .btn-sm { padding: 6px 10px; font-size: 11px; }
+
+  /* ── Persona cards ── */
+  .persona-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; background: var(--card);
+    border: 1px solid var(--card-border); border-radius: var(--radius);
+    cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow);
+    margin-bottom: 8px;
+  }
+  .persona-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-1px); }
+  .persona-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
+  .avatar {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--blue-bg), var(--purple-bg));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--blue); flex-shrink: 0;
+  }
+  .persona-info { flex: 1; min-width: 0; }
+  .persona-name { font-size: 14px; font-weight: 700; }
+  .persona-role { font-size: 11.5px; color: var(--text2); margin-top: 2px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .tag {
+    font-size: 10px; font-weight: 600; padding: 2px 7px;
+    border-radius: 5px; background: var(--bg2); color: var(--text3);
+  }
+
+  /* ── Dossier tabs ── */
+  .dossier-tabs {
+    display: flex; gap: 2px; padding: 16px 20px 0;
+    border-bottom: 1px solid var(--bg2); background: white;
+    overflow-x: auto;
+  }
+  .dtab {
+    font: 600 12px/1 'Onest', sans-serif;
+    padding: 10px 14px; border: none; background: transparent;
+    color: var(--text3); cursor: pointer; white-space: nowrap;
+    border-bottom: 2px solid transparent; transition: all 0.15s;
+  }
+  .dtab:hover { color: var(--text2); }
+  .dtab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Dossier content ── */
+  .dossier-content { padding: 20px; overflow-y: auto; flex: 1; background: white; }
+  .section { margin-bottom: 22px; }
+  .section-title {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--text3); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-title::before {
+    content: ''; display: inline-block; width: 3px; height: 11px;
+    border-radius: 2px; background: var(--accent);
+  }
+  .text-block { font-size: 13.5px; color: var(--text2); line-height: 1.6; }
+  .goal-list { list-style: none; }
+  .goal-list li { font-size: 13px; color: var(--text2); padding: 4px 0; display: flex; gap: 8px; }
+  .goal-list.prof li::before { content: '→'; color: var(--green); font-weight: 700; }
+  .goal-list.pers li::before { content: '→'; color: var(--blue); font-weight: 700; }
+  .sub-label { font-size: 10.5px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 6px; }
+
+  .pain-card {
+    padding: 12px 14px; background: var(--bg); border-radius: var(--radius-sm);
+    margin-bottom: 7px; border-left: 3px solid transparent;
+  }
+  .pain-card.critical { border-left-color: var(--accent); }
+  .pain-card.high { border-left-color: var(--amber); }
+  .pain-card.medium { border-left-color: var(--blue); }
+  .pain-header { display: flex; align-items: start; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+  .pain-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .severity {
+    font-size: 9.5px; font-weight: 700; padding: 2px 7px;
+    border-radius: 5px; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .severity.critical { background: var(--accent-bg); color: var(--accent); }
+  .severity.high { background: var(--amber-bg); color: var(--amber); }
+  .severity.medium { background: var(--blue-bg); color: var(--blue); }
+  .pain-detail { font-size: 12px; color: var(--text3); line-height: 1.5; }
+
+  .criteria-list { list-style: none; counter-reset: c; }
+  .criteria-list li {
+    font-size: 13px; color: var(--text2); padding: 5px 0;
+    display: flex; align-items: baseline; gap: 10px; counter-increment: c;
+  }
+  .criteria-list li::before {
+    content: counter(c); width: 20px; height: 20px; border-radius: 6px;
+    background: var(--blue-bg); color: var(--blue); font-size: 10.5px;
+    font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .inf-list { list-style: none; }
+  .inf-list li { font-size: 12.5px; color: var(--text2); padding: 4px 0 4px 14px; position: relative; }
+  .inf-list li::before { content: '•'; position: absolute; left: 0; color: var(--text3); font-weight: 700; }
+  .info-row { display: flex; gap: 10px; padding: 5px 0; font-size: 12.5px; }
+  .info-label { color: var(--text3); min-width: 110px; flex-shrink: 0; font-weight: 500; }
+  .info-value { color: var(--text2); }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 4px; }
+  .badge { font-size: 10.5px; font-weight: 500; padding: 3px 9px; border-radius: 6px; background: var(--bg2); color: var(--text2); }
+  .phrase {
+    padding: 8px 0 8px 14px; border-left: 2px solid var(--bg3);
+    font-size: 13px; color: var(--text2); font-style: italic; margin-bottom: 8px; line-height: 1.5;
+  }
+  .trigger-list { list-style: none; }
+  .trigger-list li { font-size: 12.5px; color: var(--text2); padding: 3px 0; display: flex; gap: 8px; }
+  .trigger-list.good li::before { content: '✓'; color: var(--green); font-weight: 700; }
+  .trigger-list.bad li::before { content: '✗'; color: var(--accent); font-weight: 700; }
+
+  /* ── Chat panel ── */
+  .chat-panel {
+    display: flex; flex-direction: column; height: 100%;
+    background: var(--bg);
+  }
+  .chat-header {
+    padding: 16px 20px; background: white;
+    border-bottom: 1px solid var(--bg2);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .chat-header-info { display: flex; align-items: center; gap: 12px; }
+  .chat-header-name { font-size: 14px; font-weight: 700; }
+  .chat-header-role { font-size: 11px; color: var(--text3); }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .msg {
+    max-width: 85%; padding: 12px 16px;
+    border-radius: 16px; font-size: 13.5px; line-height: 1.55;
+    animation: msgIn 0.2s ease;
+  }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .msg.user {
+    align-self: flex-end; background: var(--text); color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .msg.persona {
+    align-self: flex-start; background: white; color: var(--text);
+    border: 1px solid var(--card-border); border-bottom-left-radius: 4px;
+  }
+  .msg.system {
+    align-self: center; background: var(--bg2); color: var(--text3);
+    font-size: 12px; border-radius: 10px; padding: 8px 14px;
+  }
+  .msg.typing {
+    align-self: flex-start; background: white; color: var(--text3);
+    border: 1px solid var(--card-border); border-bottom-left-radius: 4px;
+    font-style: italic;
+  }
+  .chat-input-row {
+    padding: 14px 20px; background: white;
+    border-top: 1px solid var(--bg2);
+    display: flex; gap: 10px;
+  }
+  .chat-input {
+    flex: 1; padding: 10px 14px; border-radius: 12px;
+    border: 1px solid var(--bg3); font: 13.5px/1.4 'Onest', sans-serif;
+    background: var(--bg); color: var(--text); resize: none;
+    outline: none; transition: border 0.15s;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--text3); }
+  .send-btn {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: var(--accent); color: white; border: none;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; transition: opacity 0.15s; flex-shrink: 0;
+  }
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── API Key modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal {
+    background: white; border-radius: 20px; padding: 28px;
+    max-width: 420px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: var(--text2); margin-bottom: 16px; line-height: 1.5; }
+  .modal input {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid var(--bg3); font: 13px/1.4 'Onest', monospace;
+    margin-bottom: 14px; outline: none;
+  }
+  .modal input:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ── Empty / no selection ── */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; height: 100%; color: var(--text3);
+    text-align: center; padding: 40px;
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+  .empty-state p { font-size: 12.5px; max-width: 260px; }
+
+  /* ── View toggle ── */
+  .view-toggle {
+    display: flex; gap: 2px; padding: 3px;
+    background: var(--bg2); border-radius: 10px; margin-bottom: 16px;
+  }
+  .vtab {
+    flex: 1; padding: 8px; border: none; border-radius: 8px;
+    font: 600 11.5px/1 'Onest', sans-serif;
+    cursor: pointer; background: transparent; color: var(--text3);
+    transition: all 0.15s;
+  }
+  .vtab.active { background: white; color: var(--text); box-shadow: var(--shadow); }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+// ══════════════════════════════════════
+// PERSONA DATA
+// ══════════════════════════════════════
+const PERSONAS = [
+  {
+    id: "marina-bank-cc",
+    name: "Марина Соколова",
+    role: "Руководитель Управления контактного центра",
+    company: "АО «ЕвразБанк»",
+    age: "39", location: "Москва",
+    education: "Финансовый университет при Правительстве РФ, MBA ВШБ МГУ",
+    experience: "14 лет в банковской сфере, 5 лет в текущей роли",
+    industry: "Банки",
+    tags: ["banking", "contact-center", "enterprise", "naumen"],
+    career: "Начинала оператором в КЦ «Русского Стандарта» во время учёбы. За 3 года выросла до супервайзера, перешла в Альфа-Банк руководителем группы. В 30 лет — начальник отдела контроля качества в ЕвразБанке, через 4 года возглавила управление КЦ.",
+    situation: "КЦ: ~1200 операторов, 4 площадки. Нагрузка +18% из-за запуска мобильного банка. Текучка 48%. ЦБ выдал предписание по жалобам. Миграция с Genesys на Naumen (Q2 2026).",
+    goals: {
+      professional: ["FCR: 68% → 78%", "AHT: 340 → 280 сек", "Закрыть предписание ЦБ до Q3 2026", "Автоматизация: 22% → 40%", "CSAT: 4.0 → 4.2+"],
+      personal: ["Директор по клиентскому сервису через 2-3 года", "Выступить на «Контакт-центр 2026»", "От тушения пожаров к стратегии"]
+    },
+    pains: [
+      { pain: "Контроль качества вручную", severity: "critical", detail: "Группа качества (8 чел.) слушает ~3% звонков. Бюджет на расширение заморожен. По качеству прилетело предписание ЦБ." },
+      { pain: "Текучка 48%", severity: "high", detail: "Новички 2 месяца «убивают» метрики. 30% времени на кадры. Зарплата 55 тыс. — конкуренция с курьерами." },
+      { pain: "Миграция на Naumen", severity: "high", detail: "WFM не развёрнут, отчётность в Excel. Интеграция с Siebel в процессе." },
+      { pain: "Давление на продажи через КЦ", severity: "medium", detail: "Розница требует кросс-продажи, что конфликтует с качеством." },
+      { pain: "Разрозненная аналитика", severity: "medium", detail: "Телефония, чаты, жалобы — в разных системах. Нет единой картины." }
+    ],
+    decisions: {
+      criteria: ["Совместимость с Naumen и Siebel", "Кейсы в банках РФ", "Пилот за 8-12 недель", "TCO", "On-premise / private cloud"],
+      influence: ["Зампред по рознице — бюджет", "IT-директор — вето", "ИБ — архитектура", "Тендерный комитет"],
+      procCycle: "Пилот (2-3 мес.) → бизнес-кейс → ИБ+IT (1-2 мес.) → тендер (2-3 мес.). Итого 8-12 мес.",
+      budget: "OPEX до 3-4 млн/год сама. Выше — зампред."
+    },
+    info: { sources: ["Конференция «Контакт-центр»", "TAdviser", "vc.ru", "Telegram-каналы"], trusted: ["Коллеги из банков", "Аналитики Naumen", "Экс-коллеги из Альфы"] },
+    psycho: {
+      style: "Прагматик, data-driven, берёт паузу «подумать до пятницы».",
+      risk: "Консервативна после провала с чат-ботом (обещали 60%, получили 25%).",
+      triggers: ["Цифры из банковских кейсов", "Закрытие предписания ЦБ", "Снижение нагрузки на группу качества", "Интеграция с Naumen"],
+      redFlags: ["«AI лучше всех» без кейсов", "Нет on-premise", "Нет интеграции с Naumen", "Нужен разработчик с нашей стороны", "Контракт без пилота"]
+    },
+    phrases: [
+      "Покажите реальный дашборд с нашими данными — тогда поговорим.",
+      "У нас уже был AI-проект, который «точно взлетит». Не взлетел.",
+      "Мне не нужна ещё одна система. Нужно, чтобы текущие заработали вместе.",
+      "Если для пилота нужен разработчик — это не пилот, это проект.",
+      "Сначала покажите, что это работает в банке нашего размера."
+    ]
+  },
+  {
+    id: "artem-avia-ai",
+    name: "Артём Ларионов",
+    role: "Директор по AI-трансформации",
+    company: "ПАО «СибирьАвиа»",
+    age: "36", location: "Москва",
+    education: "МФТИ, магистратура Сколтех (Data Science)",
+    experience: "12 лет в tech/AI, 2.5 года в текущей роли",
+    industry: "Авиация",
+    tags: ["aviation", "AI-transformation", "NLP", "chatbot", "agent"],
+    career: "Data scientist в Яндексе (рекомендации, 4 года) → руководитель группы ML в Сбере (скоринг) → первый директор по AI-трансформации в СибирьАвиа. Позиция создана с нуля по инициативе CEO.",
+    situation: "Департамент 24 чел. Подчиняется CEO. Конфликт с CIO. Три проекта: чат-бот (40% обращений, нестабильное качество), суфлёр для КЦ (пилот 50 операторов, AHT -12%), AI-агенты (MVP). КЦ вне периметра, но есть полномочия трансформировать процессы.",
+    goals: {
+      professional: ["Суфлёр в прод на 800+ операторов", "Чат-бот: 40% → 65%", "«Кейс-звезда» для совета директоров", "Voice of Customer по всем каналам", "AI-агенты в 2+ процесса"],
+      personal: ["AI-департамент = profit enabler", "Выступить на Digital Aviation Forum", "Удержать команду от bigtech"]
+    },
+    pains: [
+      { pain: "Конфликт с CIO", severity: "critical", detail: "IT саботирует интеграции через «архитектурный комитет». API-доступ к данным КЦ — 4 месяца согласований." },
+      { pain: "КЦ — закрытая зона", severity: "high", detail: "Руководитель КЦ отдаёт данные неохотно. Считает речевую аналитику «слежкой». Пилот суфлёра — только после указания CEO." },
+      { pain: "Нет единого data lake", severity: "high", detail: "КЦ в SIGURD, бронирования в PSS, loyalty в CRM. Каждый проект — «выбивание» доступа." },
+      { pain: "Утечка кадров", severity: "high", detail: "3 senior ML-инженера получили офферы из Яндекса на x1.5. Зарплатный потолок авиакомпании ниже bigtech на 30-40%." },
+      { pain: "Чат-бот подрывает доверие к AI", severity: "medium", detail: "Проблема не в модели — нет актуальной базы знаний, нестыковка с операционными данными." }
+    ],
+    decisions: {
+      criteria: ["API-first архитектура", "Русский язык production-level", "On-premise / private cloud", "Пилот за 4-6 недель", "ROI-калькулятор"],
+      influence: ["CEO — стратегия", "CIO — вето через архком", "Руководитель КЦ — гейткипер данных", "CFO — бюджет"],
+      procCycle: "Техдемо (1-2 нед.) → пилот (4-6 нед.) → бизнес-кейс CEO (2 нед.) → CIO+ИБ (1-3 мес.) → закупка. Итого 4-8 мес.",
+      budget: "До 15 млн/год сам. Выше — CEO+CFO. Свободно ~70 млн на новое."
+    },
+    info: { sources: ["Хабр", "TAdviser", "Digital Aviation Forum", "ArXiv", "Telegram: Сиолошная, Нейрон"], trusted: ["Экс-коллеги из Яндекса/Сбера", "Open-source community", "Технические демо"] },
+    psycho: {
+      style: "Инженер-руководитель. Думает системами. Если ROI не сходится за 30 секунд — теряет интерес.",
+      risk: "Экспериментирует на ограниченном скоупе. Ненавидит vendor lock-in.",
+      triggers: ["Открытый API с документацией", "Кейсы из авиации/сервиса", "Дообучение на своих данных", "Интеграция с NLP-пайплайнами"],
+      redFlags: ["«Проприетарная модель» без бенчмарков", "Нет API — только дашборд", "Нет on-premise", "Vendor lock-in", "«Мы всё сделаем за вас»", "Продажа мимо него — через CEO/CIO"]
+    },
+    phrases: [
+      "У вас есть API? Покажите документацию — я за 15 минут пойму.",
+      "Мне не нужен дашборд. Нужны raw данные и свои пайплайны.",
+      "Мы на YandexGPT + open-source. Чем вы лучше того, что я соберу сам?",
+      "Инженер стоит 400К/мес. Экономите одного — вот и ROI.",
+      "Trial 4 недели на наших данных. Лучше baseline — говорим дальше."
+    ]
+  }
+];
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let S = {
+  selectedId: null,
+  view: "dossier", // "dossier" | "interview"
+  dossierTab: "profile",
+  messages: [],
+  apiKey: localStorage.getItem("ph_api_key") || "",
+  showKeyModal: false,
+  sending: false,
+};
+
+// ══════════════════════════════════════
+// CLAUDE API
+// ══════════════════════════════════════
+function buildSystemPrompt(p) {
+  return `Ты — ${p.name}, ${p.role} в ${p.company}. Тебе ${p.age} лет. ${p.location}.
+
+ДОСЬЕ:
+Карьера: ${p.career}
+Текущая ситуация: ${p.situation}
+Цели: ${p.goals.professional.join("; ")}
+Личные мотивы: ${p.goals.personal.join("; ")}
+Боли: ${p.pains.map(x => x.pain + " — " + x.detail).join("\n")}
+Критерии: ${p.decisions.criteria.join(", ")}
+Стейкхолдеры: ${p.decisions.influence.join(", ")}
+Цикл закупки: ${p.decisions.procCycle}
+Бюджет: ${p.decisions.budget}
+Психопрофиль: ${p.psycho.style} ${p.psycho.risk}
+Триггеры: ${p.psycho.triggers.join("; ")}
+Red flags: ${p.psycho.redFlags.join("; ")}
+Типичные фразы: ${p.phrases.join(" | ")}
+
+ПРАВИЛА:
+- Отвечай ТОЛЬКО от первого лица как ${p.name}. Не выходи из роли.
+- Используй профессиональный жаргон своей отрасли.
+- Будь реалистично скептичен. Не соглашайся легко. Задавай неудобные вопросы.
+- Если вопрос вне твоей компетенции — скажи «это не моя зона, поговорите с [роль]».
+- Иногда отвечай коротко: «да», «нет», «не пробовали». Не развивай каждую тему.
+- Сохраняй консистентность: если сказал «бюджет ограничен» — не соглашайся на premium через 5 минут.
+- Отвечай на русском, если собеседник пишет на русском.`;
+}
+
+async function sendToAPI(persona, messages) {
+  const apiMessages = messages.map(m => ({
+    role: m.role === "user" ? "user" : "assistant",
+    content: m.text
+  }));
+
+  const body = {
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1000,
+    system: buildSystemPrompt(persona),
+    messages: apiMessages,
+  };
+
+  const headers = { "Content-Type": "application/json" };
+  if (S.apiKey) headers["x-api-key"] = S.apiKey;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`API ${res.status}: ${err.slice(0, 200)}`);
+  }
+
+  const data = await res.json();
+  return data.content.map(c => c.text || "").join("\n");
+}
+
+// ══════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════
+function getInitials(n) { return n.split(" ").map(w => w[0]).join("").slice(0,2); }
+function getPersona() { return PERSONAS.find(p => p.id === S.selectedId); }
+
+function select(id) {
+  S.selectedId = id;
+  S.view = "dossier";
+  S.dossierTab = "profile";
+  S.messages = [];
+  render();
+}
+
+function setView(v) { S.view = v; render(); }
+function setDossierTab(t) { S.dossierTab = t; render(); }
+
+function startInterview() {
+  if (!S.apiKey) { S.showKeyModal = true; render(); return; }
+  const p = getPersona();
+  S.view = "interview";
+  S.messages = [{ role: "system", text: `Интервью с ${p.name} (${p.role}, ${p.company}). Вы — продавец. Представьтесь и начните разговор.` }];
+  render();
+  const el = document.getElementById("chat-messages");
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+function saveKey() {
+  const input = document.getElementById("key-input");
+  if (input && input.value.trim()) {
+    S.apiKey = input.value.trim();
+    localStorage.setItem("ph_api_key", S.apiKey);
+    S.showKeyModal = false;
+    startInterview();
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById("chat-input");
+  if (!input || !input.value.trim() || S.sending) return;
+  const text = input.value.trim();
+  input.value = "";
+
+  S.messages.push({ role: "user", text });
+  S.sending = true;
+  render();
+  scrollChat();
+
+  try {
+    const chatMsgs = S.messages.filter(m => m.role !== "system");
+    const reply = await sendToAPI(getPersona(), chatMsgs);
+    S.messages.push({ role: "persona", text: reply });
+  } catch (e) {
+    S.messages.push({ role: "system", text: "⚠ Ошибка: " + e.message });
+  }
+  S.sending = false;
+  render();
+  scrollChat();
+}
+
+function scrollChat() {
+  setTimeout(() => {
+    const el = document.getElementById("chat-messages");
+    if (el) el.scrollTop = el.scrollHeight;
+  }, 50);
+}
+
+function handleKeyDown(e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function renderDossierTab(p) {
+  const t = S.dossierTab;
+  if (t === "profile") return `
+    <div class="section"><div class="section-title">Карьерный путь</div><div class="text-block">${p.career}</div></div>
+    <div class="section"><div class="section-title">Текущая ситуация</div><div class="text-block">${p.situation}</div></div>
+    <div class="section"><div class="section-title">Цели</div>
+      <div class="sub-label">Профессиональные</div><ul class="goal-list prof">${p.goals.professional.map(g=>`<li>${g}</li>`).join("")}</ul>
+      <div class="sub-label">Личные</div><ul class="goal-list pers">${p.goals.personal.map(g=>`<li>${g}</li>`).join("")}</ul>
+    </div>
+    <div class="info-row"><span class="info-label">Образование</span><span class="info-value">${p.education}</span></div>
+    <div class="info-row"><span class="info-label">Опыт</span><span class="info-value">${p.experience}</span></div>`;
+
+  if (t === "pains") return `<div class="section"><div class="section-title">Основные боли</div>
+    ${p.pains.map(x=>`<div class="pain-card ${x.severity}"><div class="pain-header"><span class="pain-name">${x.pain}</span><span class="severity ${x.severity}">${x.severity}</span></div><div class="pain-detail">${x.detail}</div></div>`).join("")}</div>`;
+
+  if (t === "decisions") return `
+    <div class="section"><div class="section-title">Критерии оценки</div><ol class="criteria-list">${p.decisions.criteria.map(c=>`<li>${c}</li>`).join("")}</ol></div>
+    <div class="section"><div class="section-title">Стейкхолдеры</div><ul class="inf-list">${p.decisions.influence.map(i=>`<li>${i}</li>`).join("")}</ul></div>
+    <div class="section"><div class="section-title">Цикл закупки</div><div class="text-block">${p.decisions.procCycle}</div></div>
+    <div class="info-row"><span class="info-label">Бюджет</span><span class="info-value">${p.decisions.budget}</span></div>
+    <div class="section" style="margin-top:16px"><div class="section-title">Источники</div><div class="badge-row">${p.info.sources.map(s=>`<span class="badge">${s}</span>`).join("")}</div></div>
+    <div class="section"><div class="section-title">Доверенные</div><ul class="inf-list">${p.info.trusted.map(t=>`<li>${t}</li>`).join("")}</ul></div>`;
+
+  if (t === "phrases") return `<div class="section"><div class="section-title">Типичные фразы</div>${p.phrases.map(ph=>`<div class="phrase">"${ph}"</div>`).join("")}</div>`;
+
+  if (t === "psycho") return `
+    <div class="section"><div class="section-title">Стиль</div><div class="text-block">${p.psycho.style}</div></div>
+    <div class="section"><div class="section-title">Риск</div><div class="text-block">${p.psycho.risk}</div></div>
+    <div class="section"><div class="section-title">Что цепляет</div><ul class="trigger-list good">${p.psycho.triggers.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+    <div class="section"><div class="section-title">Red flags</div><ul class="trigger-list bad">${p.psycho.redFlags.map(r=>`<li>${r}</li>`).join("")}</ul></div>`;
+  return "";
+}
+
+function render() {
+  const p = getPersona();
+  const tabs = ["profile","pains","decisions","phrases","psycho"];
+  const tabNames = {profile:"Профиль",pains:"Боли",decisions:"Решения",phrases:"Фразы",psycho:"Психографика"};
+
+  document.getElementById("app").innerHTML = `
+    <div class="sidebar">
+      <div class="header">
+        <div class="header-left">
+          <div class="logo">P</div>
+          <div><div class="header-title">PersonaHub</div><div class="header-sub">Библиотека персон + интервью</div></div>
+        </div>
+      </div>
+      ${PERSONAS.map(per => `
+        <div class="persona-card ${S.selectedId === per.id ? "active" : ""}" onclick="select('${per.id}')">
+          <div class="avatar">${getInitials(per.name)}</div>
+          <div class="persona-info">
+            <div class="persona-name">${per.name}</div>
+            <div class="persona-role">${per.role} · ${per.company}</div>
+            <div class="tags">${per.tags.slice(0,4).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+          </div>
+        </div>
+      `).join("")}
+      ${S.apiKey ? `<div style="margin-top:16px;font-size:11px;color:var(--text3)">🔑 API-ключ сохранён <button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="S.apiKey='';localStorage.removeItem('ph_api_key');render()">Сбросить</button></div>` : `<button class="btn btn-ghost" style="margin-top:16px;width:100%" onclick="S.showKeyModal=true;render()">🔑 Ввести API-ключ</button>`}
+    </div>
+
+    <div class="main">
+      ${!p ? `
+        <div class="empty-state">
+          <div class="icon">👤</div>
+          <h3>Выберите персону</h3>
+          <p>Кликните на карточку слева, чтобы открыть досье или начать интервью</p>
+        </div>
+      ` : `
+        <div style="padding:16px 20px 0;background:white;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="avatar">${getInitials(p.name)}</div>
+            <div>
+              <div style="font-size:15px;font-weight:700">${p.name}</div>
+              <div style="font-size:11.5px;color:var(--text3)">${p.role} · ${p.company}</div>
+            </div>
+          </div>
+          <div class="view-toggle">
+            <button class="vtab ${S.view==="dossier"?"active":""}" onclick="setView('dossier')">📋 Досье</button>
+            <button class="vtab ${S.view==="interview"?"active":""}" onclick="startInterview()">💬 Интервью</button>
+          </div>
+        </div>
+
+        ${S.view === "dossier" ? `
+          <div class="dossier-tabs">
+            ${tabs.map(t=>`<button class="dtab ${S.dossierTab===t?"active":""}" onclick="setDossierTab('${t}')">${tabNames[t]}</button>`).join("")}
+          </div>
+          <div class="dossier-content">${renderDossierTab(p)}</div>
+        ` : `
+          <div class="chat-panel">
+            <div class="chat-messages" id="chat-messages">
+              ${S.messages.map(m => `<div class="msg ${m.role}">${m.text.replace(/\n/g,"<br>")}</div>`).join("")}
+              ${S.sending ? `<div class="msg typing">${p.name} печатает…</div>` : ""}
+            </div>
+            <div class="chat-input-row">
+              <textarea class="chat-input" id="chat-input" rows="1" placeholder="Ваше сообщение…" onkeydown="handleKeyDown(event)"></textarea>
+              <button class="send-btn" onclick="sendMessage()" ${S.sending?"disabled":""}>${S.sending?"⏳":"➤"}</button>
+            </div>
+          </div>
+        `}
+      `}
+    </div>
+
+    ${S.showKeyModal ? `
+      <div class="modal-overlay" onclick="S.showKeyModal=false;render()">
+        <div class="modal" onclick="event.stopPropagation()">
+          <h3>🔑 API-ключ Anthropic</h3>
+          <p>Для интервью нужен ключ Claude API. Получите на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Ключ сохраняется только локально в вашем браузере.</p>
+          <input id="key-input" type="password" placeholder="sk-ant-..." value="${S.apiKey}" />
+          <div class="modal-btns">
+            <button class="btn btn-ghost" onclick="S.showKeyModal=false;render()">Отмена</button>
+            <button class="btn btn-accent" onclick="saveKey()">Сохранить и начать</button>
+          </div>
+        </div>
+      </div>
+    ` : ""}
+  `;
+
+  scrollChat();
+}
+
+render();
+</script>
+</body>
+</html>

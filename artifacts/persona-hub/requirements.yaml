@@ -1,0 +1,12 @@
+packages:
+  "framer-motion": "For premium smooth page transitions and interactive animations"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility to safely merge Tailwind classes"
+
+images: []
+
+notes:
+  - API expects POST /api/anthropic/conversations to create a chat session
+  - API expects POST /api/anthropic/conversations/{id}/messages for SSE chat streaming
+  - SSE streams chunks in format `data: {"content": "..."}` and ends with `data: {"done": true}`
+  - No auth needed for this prototype based on requirements

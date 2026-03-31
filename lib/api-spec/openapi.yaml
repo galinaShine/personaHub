@@ -1,0 +1,817 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: anthropic
+    description: Anthropic AI chat operations
+  - name: personas
+    description: Persona library operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /anthropic/conversations:
+    get:
+      operationId: listAnthropicConversations
+      tags: [anthropic]
+      summary: List all conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnthropicConversation"
+    post:
+      operationId: createAnthropicConversation
+      tags: [anthropic]
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAnthropicConversationBody"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicConversation"
+  /anthropic/conversations/{id}:
+    get:
+      operationId: getAnthropicConversation
+      tags: [anthropic]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicError"
+    delete:
+      operationId: deleteAnthropicConversation
+      tags: [anthropic]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicError"
+  /anthropic/conversations/{id}/messages:
+    get:
+      operationId: listAnthropicMessages
+      tags: [anthropic]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnthropicMessage"
+    post:
+      operationId: sendAnthropicMessage
+      tags: [anthropic]
+      summary: Send a message and receive an AI response (SSE stream)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendAnthropicMessageBody"
+      responses:
+        "200":
+          description: SSE stream of assistant response chunks
+          content:
+            text/event-stream: {}
+  /personas:
+    get:
+      operationId: listPersonas
+      tags: [personas]
+      summary: List all personas
+      responses:
+        "200":
+          description: List of personas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PersonaListItem"
+    post:
+      operationId: upsertPersona
+      tags: [personas]
+      summary: Create or update a persona (auth required)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertPersonaBody"
+      responses:
+        "200":
+          description: Upserted persona
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaListItem"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+  /personas/{id}:
+    get:
+      operationId: getPersona
+      tags: [personas]
+      summary: Get a persona with notes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Persona detail with notes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+    delete:
+      operationId: deletePersona
+      tags: [personas]
+      summary: Delete a persona (auth required)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+  /personas/{id}/notes:
+    get:
+      operationId: listPersonaNotes
+      tags: [personas]
+      summary: List notes for a persona
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PersonaNote"
+    post:
+      operationId: addPersonaNote
+      tags: [personas]
+      summary: Add a note to a persona (auth required)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddNoteBody"
+      responses:
+        "201":
+          description: Created note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaNote"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+  /personas/{id}/notes/{noteId}:
+    delete:
+      operationId: deletePersonaNote
+      tags: [personas]
+      summary: Delete a note by ID (auth required)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success]
+                properties:
+                  success:
+                    type: boolean
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+  /personas/{id}/opinion:
+    post:
+      operationId: generatePersonaOpinion
+      tags: [personas]
+      summary: Generate AI opinion in persona character, saved as note (auth required)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpinionBody"
+      responses:
+        "200":
+          description: Generated opinion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpinionResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+  /personas/{id}/interviews:
+    get:
+      operationId: listPersonaInterviews
+      tags: [personas]
+      summary: List saved interviews for a persona (no auth)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of interview summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InterviewSummary"
+        "404":
+          description: Persona not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+  /personas/{id}/interviews/{iid}:
+    get:
+      operationId: getPersonaInterview
+      tags: [personas]
+      summary: Get full interview with messages (no auth)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: iid
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Full interview with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+    delete:
+      operationId: deletePersonaInterview
+      tags: [personas]
+      summary: Delete an interview (auth required)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: iid
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success]
+                properties:
+                  success:
+                    type: boolean
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+  /personas/{id}/interviews/{iid}/summary:
+    post:
+      operationId: generateInterviewSummary
+      tags: [personas]
+      summary: Generate and save AI summary for an interview (no auth)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: iid
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Generated summary
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [summary]
+                properties:
+                  summary:
+                    type: string
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+  /personas/{id}/interview:
+    post:
+      operationId: interviewPersona
+      tags: [personas]
+      summary: Send a message and receive an SSE stream response in persona character
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InterviewMessageBody"
+      responses:
+        "200":
+          description: SSE stream of persona response chunks
+          content:
+            text/event-stream: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonaError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    AnthropicConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - createdAt
+    AnthropicMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - role
+        - content
+        - createdAt
+    CreateAnthropicConversationBody:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+    SendAnthropicMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+    AnthropicConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnthropicMessage"
+      required:
+        - id
+        - title
+        - createdAt
+        - messages
+    AnthropicError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    PersonaListItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        company:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - role
+        - company
+        - createdAt
+    PersonaNote:
+      type: object
+      properties:
+        id:
+          type: integer
+        personaId:
+          type: string
+        type:
+          type: string
+        sourceUrl:
+          type: string
+          nullable: true
+        sourceText:
+          type: string
+        response:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - personaId
+        - type
+        - sourceText
+        - createdAt
+    PersonaDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        company:
+          type: string
+        data:
+          type: object
+        notes:
+          type: array
+          items:
+            $ref: "#/components/schemas/PersonaNote"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - role
+        - company
+        - data
+        - notes
+        - createdAt
+    UpsertPersonaBody:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        company:
+          type: string
+        data:
+          type: object
+      required:
+        - id
+        - name
+        - role
+        - company
+        - data
+    AddNoteBody:
+      type: object
+      properties:
+        type:
+          type: string
+        sourceUrl:
+          type: string
+          nullable: true
+        sourceText:
+          type: string
+        response:
+          type: string
+          nullable: true
+      required:
+        - type
+        - sourceText
+    OpinionBody:
+      type: object
+      properties:
+        sourceText:
+          type: string
+        sourceUrl:
+          type: string
+          nullable: true
+      required:
+        - sourceText
+    OpinionResponse:
+      type: object
+      properties:
+        opinion:
+          type: string
+        note:
+          $ref: "#/components/schemas/PersonaNote"
+      required:
+        - opinion
+        - note
+    InterviewMessageBody:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+              content:
+                type: string
+            required:
+              - role
+              - content
+      required:
+        - messages
+    InterviewSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        personaId:
+          type: string
+        summary:
+          type: string
+          nullable: true
+        messageCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - personaId
+        - messageCount
+        - createdAt
+    InterviewDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        personaId:
+          type: string
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+              content:
+                type: string
+            required:
+              - role
+              - content
+        summary:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - personaId
+        - messages
+        - createdAt
+    PersonaError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

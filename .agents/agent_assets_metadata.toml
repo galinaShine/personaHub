@@ -1,0 +1,32 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "mn04eYTteUmP1U3WHavaM"
+uri = "file://artifacts/persona-hub/public/PersonaHub_Chrome_Extension.zip"
+type = "unspecified"
+title = "PersonaHub Chrome Extension (исправленный)"
+
+[[outputs]]
+id = "BAA-Dxg4bE7JZoMSYNkr-"
+uri = "file://attached_assets/PersonaHub_Chrome_Extension_v1.1.zip"
+type = "unspecified"
+title = "PersonaHub Chrome Extension v1.1"
+
+[[outputs]]
+id = "j-Q5ksUnq1T_0vTGFjGks"
+uri = "file://attached_assets/PersonaHub_Chrome_Extension_v1.2.zip"
+type = "unspecified"
+title = "PersonaHub Chrome Extension v1.2"
+
+[[outputs]]
+id = "ZicvPtpdzOFW7YyFrXz_9"
+uri = "file://attached_assets/PersonaHub_Chrome_Extension_v1.3.zip"
+type = "unspecified"
+title = "PersonaHub Chrome Extension v1.3 (исправлено)"
+
+[[outputs]]
+id = "4ZgHh1_ZffZdb0gf5s45x"
+uri = "file://attached_assets/PersonaHub_Chrome_Extension_v1.4.zip"
+type = "unspecified"
+title = "PersonaHub Chrome Extension v1.4"
